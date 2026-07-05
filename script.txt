@@ -93,3 +93,92 @@ Toggle.MouseButton1Click:Connect(function()
 		Toggle.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 	end
 end)
+-- Put this after you've created Frame and Title.
+
+-------------------------------------------------
+-- Minimize Button
+-------------------------------------------------
+
+local Minimized = false
+local OriginalSize = Frame.Size
+
+local Minimize = Instance.new("TextButton")
+Minimize.Size = UDim2.new(0, 30, 0, 30)
+Minimize.Position = UDim2.new(1, -40, 0, 8)
+Minimize.Text = "−"
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextScaled = true
+Minimize.TextColor3 = Color3.new(1,1,1)
+Minimize.BackgroundColor3 = Color3.fromRGB(55,55,55)
+Minimize.Parent = Frame
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0,8)
+MinCorner.Parent = Minimize
+
+Minimize.MouseButton1Click:Connect(function()
+	Minimized = not Minimized
+
+	for _, v in ipairs(Frame:GetChildren()) do
+		if v ~= Title and v ~= Minimize and not v:IsA("UICorner") and not v:IsA("UIStroke") then
+			v.Visible = not Minimized
+		end
+	end
+
+	if Minimized then
+		Frame.Size = UDim2.new(0, 300, 0, 45)
+		Minimize.Text = "+"
+	else
+		Frame.Size = OriginalSize
+		Minimize.Text = "−"
+	end
+end)
+
+-------------------------------------------------
+-- Drag UI (Mouse + Mobile)
+-------------------------------------------------
+
+local UIS = game:GetService("UserInputService")
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function Update(input)
+	local delta = input.Position - dragStart
+	Frame.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+Title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Title.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+	or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		Update(input)
+	end
+end)
